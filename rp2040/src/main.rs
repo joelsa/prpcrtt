@@ -3,7 +3,7 @@
 
 use app::AppTx;
 use embassy_executor::Spawner;
-use embassy_rp::{bind_interrupts, gpio::{Level, Output}, peripherals::USB, usb};
+use embassy_rp::gpio::{Level, Output};
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Instant, Ticker};
 use impls::{RttRx, RttTx, RttTxInner};
@@ -11,10 +11,6 @@ use postcard_rpc::{header::VarSeq, server::{Dispatch, Sender, Server}};
 use rtt_target::rtt_init;
 use static_cell::{ConstStaticCell, StaticCell};
 use template_icd::{HelloTopic, HelloWorld};
-
-bind_interrupts!(pub struct Irqs {
-    USBCTRL_IRQ => usb::InterruptHandler<USB>;
-});
 
 use panic_reset as _;
 

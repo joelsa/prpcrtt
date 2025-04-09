@@ -1,10 +1,10 @@
 //! A basic postcard-rpc/poststation-compatible application
 
 use crate::{handlers::{get_led, set_led, unique_id}, impls::{RttRx, RttTx}};
-use embassy_rp::{gpio::Output, peripherals::USB, usb};
+use embassy_rp::gpio::Output;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use postcard_rpc::server::impls::embassy_usb_v0_3::{
-    dispatch_impl::{WireRxBuf, WireSpawnImpl, WireStorage},
+    dispatch_impl::{WireRxBuf, WireSpawnImpl},
     PacketBuffers,
 };
 use postcard_rpc::{
@@ -46,17 +46,6 @@ pub struct TaskContext {
 //
 // If you are using the RP2040 - you shouldn't need to modify any of these!
 
-/// This alias describes the type of driver we will need. In this case, we
-/// are using the embassy-usb driver with the RP2040 USB peripheral
-pub type AppDriver = usb::Driver<'static, USB>;
-/// Storage describes the things we need to keep as a static, so it can be shared
-/// with anyone who needs to send messages.
-///
-/// We can accept any mutex (this is using the thread-mode mutex, meaning that
-/// it will work outside of interrupts or interrupt executors). The numeric
-/// items control the buffer sizes allocated for Config, BOS, Control, and
-/// MSOS USB buffers. See embassy-usb for more details on this.
-pub type AppStorage = WireStorage<ThreadModeRawMutex, AppDriver, 256, 256, 64, 256>;
 /// BufStorage is the space used for receiving and sending frames. These values
 /// control the largest frames we can send or receive.
 pub type BufStorage = PacketBuffers<1024, 1024>;
