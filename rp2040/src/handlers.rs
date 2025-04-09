@@ -1,23 +1,11 @@
-use core::sync::atomic::{compiler_fence, Ordering};
-
-use embassy_time::{Instant, Timer};
 use postcard_rpc::{header::VarHeader, server::Sender};
-use template_icd::{LedState, SleepEndpoint, SleepMillis, SleptMillis};
+use template_icd::{LedState, RadarPointSeq, RadarResponse, RadarEndpoint};
 
 use crate::app::{AppTx, Context, TaskContext};
 
 /// This is an example of a BLOCKING handler.
 pub fn unique_id(context: &mut Context, _header: VarHeader, _arg: ()) -> u64 {
     context.unique_id
-}
-
-/// Also a BLOCKING handler
-pub fn picoboot_reset(_context: &mut Context, _header: VarHeader, _arg: ()) {
-    embassy_rp::rom_data::reset_to_usb_boot(0, 0);
-    loop {
-        // Wait for reset...
-        compiler_fence(Ordering::SeqCst);
-    }
 }
 
 /// Also a BLOCKING handler
@@ -40,12 +28,31 @@ pub fn get_led(context: &mut Context, _header: VarHeader, _arg: ()) -> LedState 
 /// The pool size of three means we can have up to three of these requests "in flight"
 /// at the same time. We will return an error if a fourth is requested at the same time
 #[embassy_executor::task(pool_size = 3)]
-pub async fn sleep_handler(_context: TaskContext, header: VarHeader, arg: SleepMillis, sender: Sender<AppTx>) {
-    // We can send string logs, using the sender
-    let _ = sender.log_str("Starting sleep...").await;
-    let start = Instant::now();
-    Timer::after_millis(arg.millis.into()).await;
-    let _ = sender.log_str("Finished sleep").await;
-    // Async handlers have to manually reply, as embassy doesn't support returning by value
-    let _ = sender.reply::<SleepEndpoint>(header.seq_no, &SleptMillis { millis: start.elapsed().as_millis() as u16 }).await;
+pub async fn radar_handler(_context: TaskContext, header: VarHeader, points: RadarPointSeq, sender: Sender<AppTx>) {
+    let response = if points.len() >= 2 {
+        // Take first point's coordinates as v_r
+        let v_r = [
+            points[0].x,
+            points[0].y,
+            points[0].z,
+        ];
+        
+        // Take second point's coordinates as sigma
+        let sigma = [
+            points[1].x,
+            points[1].y,
+            points[1].z,
+        ];
+
+        RadarResponse { v_r, sigma }
+    } else {
+        // Default response if not enough points
+        RadarResponse {
+            v_r: [0.0, 0.0, 0.0],
+            sigma: [0.0, 0.0, 0.0],
+        }
+    };
+
+    // Send response
+    let _ = sender.reply::<RadarEndpoint>(header.seq_no, &response).await;
 }

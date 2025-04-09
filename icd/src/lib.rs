@@ -3,15 +3,24 @@
 use postcard_rpc::{endpoints, topics, TopicDirection};
 use postcard_schema::Schema;
 use serde::{Deserialize, Serialize};
+use heapless::Vec;
 
 #[derive(Debug, Serialize, Deserialize, Schema)]
-pub struct SleepMillis {
-    pub millis: u16,
+pub struct RadarPoint {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub snr_db: f64,
+    pub noise_db: f64,
+    pub v_doppler_mps: f64,
 }
 
+pub type RadarPointSeq = Vec<RadarPoint, 256>;
+
 #[derive(Debug, Serialize, Deserialize, Schema)]
-pub struct SleptMillis {
-    pub millis: u16,
+pub struct RadarResponse {
+    pub v_r: [f64; 3],
+    pub sigma: [f64; 3],
 }
 
 #[derive(Debug, Serialize, Deserialize, Schema)]
@@ -26,19 +35,15 @@ pub struct HelloWorld {
 }
 
 // ---
-
 // Endpoints spoken by our device
-//
-// GetUniqueIdEndpoint is mandatory, the others are examples
 endpoints! {
     list = ENDPOINT_LIST;
-    | EndpointTy                | RequestTy     | ResponseTy            | Path                          |
-    | ----------                | ---------     | ----------            | ----                          |
-    | GetUniqueIdEndpoint       | ()            | u64                   | "poststation/unique_id/get"   |
-    | RebootToPicoBoot          | ()            | ()                    | "template/picoboot/reset"     |
-    | SleepEndpoint             | SleepMillis   | SleptMillis           | "template/sleep"              |
-    | SetLedEndpoint            | LedState      | ()                    | "template/led/set"            |
-    | GetLedEndpoint            | ()            | LedState              | "template/led/get"            |
+    | EndpointTy                | RequestTy       | ResponseTy    | Path                          |
+    | ----------                | ---------       | ----------    | ----                          |
+    | GetUniqueIdEndpoint       | ()              | u64           | "poststation/unique_id/get"   |
+    | RadarEndpoint             | RadarPointSeq   | RadarResponse | "template/radar/process"      |
+    | SetLedEndpoint            | LedState        | ()            | "template/led/set"            |
+    | GetLedEndpoint            | ()              | LedState      | "template/led/get"            |
 }
 
 // incoming topics handled by our device
@@ -53,7 +58,7 @@ topics! {
 topics! {
     list = TOPICS_OUT_LIST;
     direction = TopicDirection::ToClient;
-    | TopicTy                   | MessageTy     | Path              | Cfg                           |
-    | -------                   | ---------     | ----              | ---                           |
-    | HelloTopic                | HelloWorld    | "hello"           |                               |
+    | TopicTy                   | MessageTy     | Path              | Cfg   |
+    | -------                   | ---------     | ----              | ---   |
+    | HelloTopic                | HelloWorld    | "hello"           |       |
 }

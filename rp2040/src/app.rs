@@ -1,10 +1,10 @@
 //! A basic postcard-rpc/poststation-compatible application
 
-use crate::{handlers::{get_led, picoboot_reset, set_led, sleep_handler, unique_id}, impls::{RttRx, RttTx}};
+use crate::{handlers::{get_led, set_led, unique_id}, impls::{RttRx, RttTx}};
 use embassy_rp::{gpio::Output, peripherals::USB, usb};
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use postcard_rpc::server::impls::embassy_usb_v0_3::{
-    dispatch_impl::{spawn_fn, WireRxBuf, WireSpawnImpl, WireStorage},
+    dispatch_impl::{WireRxBuf, WireSpawnImpl, WireStorage},
     PacketBuffers,
 };
 use postcard_rpc::{
@@ -13,7 +13,7 @@ use postcard_rpc::{
 };
 use static_cell::ConstStaticCell;
 use template_icd::{
-    GetLedEndpoint, GetUniqueIdEndpoint, RebootToPicoBoot, SetLedEndpoint, SleepEndpoint,
+    GetLedEndpoint, GetUniqueIdEndpoint, SetLedEndpoint,
 };
 use template_icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
 
@@ -108,8 +108,6 @@ define_dispatch! {
         | EndpointTy                | kind      | handler                       |
         | ----------                | ----      | -------                       |
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
-        | RebootToPicoBoot          | blocking  | picoboot_reset                |
-        | SleepEndpoint             | spawn     | sleep_handler                 |
         | SetLedEndpoint            | blocking  | set_led                       |
         | GetLedEndpoint            | blocking  | get_led                       |
     };

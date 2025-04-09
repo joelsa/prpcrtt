@@ -16,7 +16,7 @@ bind_interrupts!(pub struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
 });
 
-use {panic_reset as _};
+use panic_reset as _;
 
 pub mod app;
 pub mod handlers;
