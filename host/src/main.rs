@@ -1,21 +1,16 @@
-use std::{
-    io::{stdout, Write},
-    time::Duration,
-};
+use std::time::Duration;
 
 use cobs::{decode_vec, encode_vec};
 use impls::{ProbeRttRx, ProbeRttTx, TokSpawn};
-use postcard_rpc::{header::VarSeqKind, host_client::HostClient, standard_icd::{PingEndpoint, WireError}};
+use postcard_rpc::{header::VarSeqKind, host_client::HostClient, standard_icd::WireError};
 use probe_rs::{
     config::TargetSelector,
     probe::list::Lister,
-    rtt::{Rtt, RttChannel, ScanRegion},
-    Core, Permissions, Session,
+    rtt::{Rtt, ScanRegion},
+    Permissions, Session,
 };
 use template_icd::{HelloTopic, LedState, RadarEndpoint, RadarPoint, RadarPointSeq, SetLedEndpoint};
 use tokio::{sync::mpsc, time::{sleep, timeout}};
-
-use heapless;
 
 pub mod impls;
 
@@ -35,14 +30,7 @@ async fn main() {
 
         eprintln!("Attaching to RTT...");
 
-        let mut rtt = Rtt::attach_region(&mut core, &ScanRegion::Ram).unwrap();
-        eprintln!("Found control block at {:#010x}", rtt.ptr());
-
-        println!("Up channels:");
-        list_channels(rtt.up_channels());
-
-        println!("Down channels:");
-        list_channels(rtt.down_channels());
+        let rtt = Rtt::attach_region(&mut core, &ScanRegion::Ram).unwrap();
 
         sleep(Duration::from_millis(50)).await;
         rtt
@@ -67,54 +55,8 @@ async fn main() {
 
     let mut sub = client.subscribe_multi::<HelloTopic>(64).await.unwrap();
     tokio::task::spawn(async move {
-        while let Ok(x) = sub.recv().await {
-            println!("SUB: {x:?}");
-        }
+        while let Ok(_) = sub.recv().await {}
     });
-
-    // for i in 0..3 {
-    //     let res = timeout(Duration::from_secs(1), client.send_resp::<PingEndpoint>(&i)).await;
-    //     match res {
-    //         Ok(r) => {
-    //             let got = r.unwrap();
-    //             assert_eq!(got, i);
-    //             println!("ping :)");
-    //         },
-    //         Err(_) => {
-    //             println!("Timeout :(");
-    //         }
-    //     }
-
-    //     sleep(Duration::from_secs(1)).await;
-    // }
-
-    println!("Attempting schema discovery:");
-    let res = client.get_schema_report().await.unwrap();
-    // println!();
-    // println!("# Types");
-    // println!();
-    // for t in res.types {
-    //     println!("'{}': {}", t.name, t.to_pseudocode());
-    // }
-    println!();
-    println!("# Endpoints");
-    println!();
-    for e in res.endpoints {
-        println!("'{}': {} -> {}", e.path, e.req_ty.to_pseudocode(), e.resp_ty.to_pseudocode());
-    }
-    println!();
-    println!("# Topics Out");
-    println!();
-    for to in res.topics_out {
-        println!("'{}': ->  {}", to.path, to.ty.to_pseudocode());
-    }
-    println!();
-    println!("# Topics In");
-    println!();
-    for ti in res.topics_in {
-        println!("'{}': <-  {}", ti.path, ti.ty.to_pseudocode());
-    }
-
 
     let mut pointcloud = RadarPointSeq::new();
     pointcloud.push(RadarPoint { x: 1.0, y: 2.0, z: 3.0, snr_db: 4.0, noise_db: 5.0, v_doppler_mps: 6.0 }).unwrap();
@@ -134,8 +76,7 @@ async fn main() {
         let res = timeout(Duration::from_secs(1), client.send_resp::<SetLedEndpoint>(&LedState::On)).await;
         match res {
             Ok(r) => {
-                let got = r.unwrap();
-                println!("Response: {got:?}");
+                let _got = r.unwrap();
             },
             Err(_) => {
                 println!("Timeout :(");
@@ -148,8 +89,7 @@ async fn main() {
         let res = timeout(Duration::from_secs(1), client.send_resp::<SetLedEndpoint>(&LedState::Off)).await;
         match res {
             Ok(r) => {
-                let got = r.unwrap();
-                println!("Response: {got:?}");
+                let _got = r.unwrap();
             },
             Err(_) => {
                 println!("Timeout :(");
@@ -235,18 +175,3 @@ fn worker(
     }
 }
 
-fn list_channels(channels: &[impl RttChannel]) {
-    if channels.is_empty() {
-        println!("  (none)");
-        return;
-    }
-
-    for chan in channels.iter() {
-        println!(
-            "  {}: {} (buffer size {})",
-            chan.number(),
-            chan.name().unwrap_or("(no name)"),
-            chan.buffer_size(),
-        );
-    }
-}
