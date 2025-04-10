@@ -12,8 +12,10 @@ use probe_rs::{
     rtt::{Rtt, RttChannel, ScanRegion},
     Core, Permissions, Session,
 };
-use template_icd::HelloTopic;
+use template_icd::{HelloTopic, LedState, RadarEndpoint, RadarPoint, RadarPointSeq, SetLedEndpoint};
 use tokio::{sync::mpsc, time::{sleep, timeout}};
+
+use heapless;
 
 pub mod impls;
 
@@ -70,21 +72,21 @@ async fn main() {
         }
     });
 
-    for i in 0..3 {
-        let res = timeout(Duration::from_secs(1), client.send_resp::<PingEndpoint>(&i)).await;
-        match res {
-            Ok(r) => {
-                let got = r.unwrap();
-                assert_eq!(got, i);
-                println!("ping :)");
-            },
-            Err(_) => {
-                println!("Timeout :(");
-            }
-        }
+    // for i in 0..3 {
+    //     let res = timeout(Duration::from_secs(1), client.send_resp::<PingEndpoint>(&i)).await;
+    //     match res {
+    //         Ok(r) => {
+    //             let got = r.unwrap();
+    //             assert_eq!(got, i);
+    //             println!("ping :)");
+    //         },
+    //         Err(_) => {
+    //             println!("Timeout :(");
+    //         }
+    //     }
 
-        sleep(Duration::from_secs(1)).await;
-    }
+    //     sleep(Duration::from_secs(1)).await;
+    // }
 
     println!("Attempting schema discovery:");
     let res = client.get_schema_report().await.unwrap();
@@ -111,6 +113,50 @@ async fn main() {
     println!();
     for ti in res.topics_in {
         println!("'{}': <-  {}", ti.path, ti.ty.to_pseudocode());
+    }
+
+
+    let mut pointcloud = RadarPointSeq::new();
+    pointcloud.push(RadarPoint { x: 1.0, y: 2.0, z: 3.0, snr_db: 4.0, noise_db: 5.0, v_doppler_mps: 6.0 }).unwrap();
+    pointcloud.push(RadarPoint { x: 1.0, y: 2.0, z: 3.0, snr_db: 4.0, noise_db: 5.0, v_doppler_mps: 6.0 }).unwrap();
+    let res = timeout(Duration::from_secs(1), client.send_resp::<RadarEndpoint>(&pointcloud)).await;
+    match res {
+        Ok(r) => {
+            let got = r.unwrap();
+            println!("{got:?}");
+        },
+        Err(_) => {
+            println!("Error :(");
+        }
+    }
+
+    loop {
+        let res = timeout(Duration::from_secs(1), client.send_resp::<SetLedEndpoint>(&LedState::On)).await;
+        match res {
+            Ok(r) => {
+                let got = r.unwrap();
+                println!("Response: {got:?}");
+            },
+            Err(_) => {
+                println!("Timeout :(");
+            }
+        }
+
+        sleep(Duration::from_secs(1)).await;
+
+
+        let res = timeout(Duration::from_secs(1), client.send_resp::<SetLedEndpoint>(&LedState::Off)).await;
+        match res {
+            Ok(r) => {
+                let got = r.unwrap();
+                println!("Response: {got:?}");
+            },
+            Err(_) => {
+                println!("Timeout :(");
+            }
+        }
+
+        sleep(Duration::from_secs(1)).await;
     }
 }
 

@@ -1,10 +1,10 @@
 //! A basic postcard-rpc/poststation-compatible application
 
-use crate::{handlers::{get_led, set_led, unique_id}, impls::{RttRx, RttTx}};
+use crate::{handlers::{get_led, set_led, unique_id, radar_handler}, impls::{RttRx, RttTx}};
 use embassy_stm32::gpio::Output;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use postcard_rpc::server::impls::embassy_usb_v0_3::{
-    dispatch_impl::{WireRxBuf, WireSpawnImpl},
+    dispatch_impl::{spawn_fn, WireRxBuf, WireSpawnImpl},
     PacketBuffers,
 };
 use postcard_rpc::{
@@ -13,7 +13,7 @@ use postcard_rpc::{
 };
 use static_cell::ConstStaticCell;
 use template_icd::{
-    GetLedEndpoint, GetUniqueIdEndpoint, SetLedEndpoint,
+    GetLedEndpoint, GetUniqueIdEndpoint, SetLedEndpoint, RadarEndpoint,
 };
 use template_icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
 
@@ -43,12 +43,10 @@ pub struct TaskContext {
 // Type Aliases
 //
 // These aliases are used to keep the types from getting too out of hand.
-//
-// If you are using the RP2040 - you shouldn't need to modify any of these!
 
 /// BufStorage is the space used for receiving and sending frames. These values
 /// control the largest frames we can send or receive.
-pub type BufStorage = PacketBuffers<1024, 1024>;
+pub type BufStorage = PacketBuffers<1024, 32_768>;
 /// AppTx is the type of our sender, which is how we send information to the client
 pub type AppTx = RttTx<ThreadModeRawMutex>;
 /// AppRx is the type of our receiver, which is how we receive information from the client
@@ -97,6 +95,7 @@ define_dispatch! {
         | EndpointTy                | kind      | handler                       |
         | ----------                | ----      | -------                       |
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
+        | RadarEndpoint             | blocking  | radar_handler                 |
         | SetLedEndpoint            | blocking  | set_led                       |
         | GetLedEndpoint            | blocking  | get_led                       |
     };

@@ -23,12 +23,7 @@ pub fn get_led(context: &mut Context, _header: VarHeader, _arg: ()) -> LedState 
     }
 }
 
-/// This is a SPAWN handler
-///
-/// The pool size of three means we can have up to three of these requests "in flight"
-/// at the same time. We will return an error if a fourth is requested at the same time
-#[embassy_executor::task(pool_size = 3)]
-pub async fn radar_handler(_context: TaskContext, header: VarHeader, points: RadarPointSeq, sender: Sender<AppTx>) {
+pub fn radar_handler(_context: &mut Context, _header: VarHeader, points: RadarPointSeq) -> RadarResponse {
     let response = if points.len() >= 2 {
         // Take first point's coordinates as v_r
         let v_r = [
@@ -44,15 +39,15 @@ pub async fn radar_handler(_context: TaskContext, header: VarHeader, points: Rad
             points[1].z,
         ];
 
-        RadarResponse { v_r, sigma }
+        RadarResponse { v_r, sigma, time_us: 0 }
     } else {
         // Default response if not enough points
         RadarResponse {
             v_r: [0.0, 0.0, 0.0],
             sigma: [0.0, 0.0, 0.0],
+             time_us: 0,
         }
     };
 
-    // Send response
-    let _ = sender.reply::<RadarEndpoint>(header.seq_no, &response).await;
+    response
 }

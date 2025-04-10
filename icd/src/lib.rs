@@ -21,6 +21,7 @@ pub type RadarPointSeq = Vec<RadarPoint, 256>;
 pub struct RadarResponse {
     pub v_r: [f64; 3],
     pub sigma: [f64; 3],
+    pub time_us: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Schema)]

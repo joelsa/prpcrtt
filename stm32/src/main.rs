@@ -13,7 +13,7 @@ use static_cell::{ConstStaticCell, StaticCell};
 use template_icd::{HelloTopic, HelloWorld};
 
 use panic_probe as _;
-use defmt::info;
+//use defmt::info;
 
 pub mod app;
 pub mod handlers;
@@ -25,10 +25,6 @@ async fn main(spawner: Spawner) {
     let channels = rtt_init! {
         up: {
             0: {
-                size: 1024,
-                name: "defmt",
-            }
-            1: {
                 size: 1024,
                 mode: ChannelMode::BlockIfFull,
                 name: "postcard-rpc uplink",
@@ -42,13 +38,13 @@ async fn main(spawner: Spawner) {
         }
     };
     
-    rtt_target::set_defmt_channel(channels.up.0);
+    //rtt_target::set_defmt_channel(channels.up.0);
 
-    info!("Initializing Firmware...");
+    //info!("Initializing Firmware...");
 
     // SYSTEM INIT
     let p = embassy_stm32::init(Default::default());
-    // Obtain the flash ID
+    // Obtain the STM32 UID
     let unique_id = unique_id::get_unique_id().unwrap();
 
     // USB/RPC INIT
@@ -59,12 +55,12 @@ async fn main(spawner: Spawner) {
 
     static BUF_TX_1: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0u8; 1024]);
     static BUF_TX_2: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0u8; 1024]);
-    static BUF_RX: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0u8; 1024]);
+    static BUF_RX: ConstStaticCell<[u8; 32_768]> = ConstStaticCell::new([0u8; 32_768]);
     static TX_STO: StaticCell<Mutex<ThreadModeRawMutex, RttTxInner>> = StaticCell::new();
 
     let tx_impl = RttTx {
         inner: TX_STO.init(Mutex::new(RttTxInner {
-            channel: channels.up.1,
+            channel: channels.up.0,
             buf1: BUF_TX_1.take(),
             buf2: BUF_TX_2.take(),
         })),

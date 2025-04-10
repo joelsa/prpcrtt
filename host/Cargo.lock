@@ -115,9 +115,23 @@ dependencies = [
 
 [[package]]
 name = "bitfield"
-version = "0.17.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f798d2d157e547aa99aab0967df39edd0b70307312b6f8bd2848e6abe40896e0"
+checksum = "4c7e6caee68becd795bfd65f1a026e4d00d8f0c2bc9be5eb568e1015f9ce3c34"
+dependencies = [
+ "bitfield-macros",
+]
+
+[[package]]
+name = "bitfield-macros"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "331afbb18ce7b644c0b428726d369c5dd37ca0b815d72a459fcc2896c3c8ad32"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+]
 
 [[package]]
 name = "bitflags"
@@ -723,6 +737,7 @@ name = "host"
 version = "0.1.0"
 dependencies = [
  "cobs",
+ "heapless 0.8.0",
  "postcard",
  "postcard-rpc",
  "postcard-schema",
@@ -1358,9 +1373,9 @@ checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
 
 [[package]]
 name = "probe-rs"
-version = "0.26.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5e0a98981ff2000bb7e4531d198dbde9d0e169c8f0be386801f22d911c8168"
+checksum = "463a5868abaecef1a2a586131e7af86b5c33e0cde58567e1c557da78bbf27469"
 dependencies = [
  "anyhow",
  "async-io",
@@ -1386,7 +1401,7 @@ dependencies = [
  "serde_yaml",
  "serialport",
  "svg",
- "thiserror 1.0.69",
+ "thiserror 2.0.11",
  "tracing",
  "uf2-decode",
  "zerocopy",
@@ -1394,9 +1409,9 @@ dependencies = [
 
 [[package]]
 name = "probe-rs-target"
-version = "0.26.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1725a9cbf58efc76d6874729a8ec61fd00d8d6883765a32f4f4bf97e9461a01"
+checksum = "503eebbfca77873c7dd0d109f44ad152fdb1b2902d62a8f604ebc3d41a004e26"
 dependencies = [
  "base64",
  "indexmap",
