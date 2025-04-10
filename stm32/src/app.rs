@@ -1,7 +1,7 @@
 //! A basic postcard-rpc/poststation-compatible application
 
 use crate::{handlers::{get_led, set_led, unique_id}, impls::{RttRx, RttTx}};
-use embassy_rp::gpio::Output;
+use embassy_stm32::gpio::Output;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use postcard_rpc::server::impls::embassy_usb_v0_3::{
     dispatch_impl::{WireRxBuf, WireSpawnImpl},

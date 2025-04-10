@@ -1,0 +1,60 @@
+[package]
+name = "template-stm32"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+embassy-stm32           = { version = "0.2.0", features = ["defmt", "stm32h723zg", "time-driver-tim2", "exti", "memory-x", "unstable-pac", "chrono"] }
+embassy-sync            = { version = "0.6.2", features = ["defmt"] }
+embassy-executor        = { version = "0.7.0", features = ["arch-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
+embassy-time            = { version = "0.4.0", features = ["defmt", "defmt-timestamp-uptime", "tick-hz-32_768"] }
+
+postcard-rpc            = { version = "0.11.0",   features = ["embassy-usb-0_3-server"] }
+postcard                = { version = "1.1.0" }
+postcard-schema         = { version = "0.2.0", features = ["derive"] }
+portable-atomic         = { version = "1.6.0", features = ["critical-section"] }
+
+defmt = { version = "0.3", features = [] }
+
+cortex-m                = { version = "0.7.6", features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt             = "0.7.0"
+
+static_cell             = "2.1"
+template-icd            = { path = "../icd" }
+
+panic-probe = { version = "0.3", features = ["print-defmt"] }
+serde = { version = "1.0.217", default-features = false, features = ["derive"] }
+cobs = { version = "0.2.3", default-features = false }
+
+[dependencies.rtt-target]
+# path = "../vendor/rtt-target/rtt-target"
+version = "0.6.1"
+features = ["defmt"]
+
+[profile.release]
+debug = 2
+lto = true
+opt-level = 'z'
+codegen-units = 1
+incremental = false
+
+[profile.ci]
+inherits = "dev"
+debug = false
+strip = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = false
+codegen-units = 256
+rpath = false
+
+[patch.crates-io]
+embassy-stm32        = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }
+embassy-sync         = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }
+embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }
+embassy-executor     = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }
+embassy-time         = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }
+embassy-time-driver  = { git = "https://github.com/embassy-rs/embassy", rev = "3a85ecebef61017069da9f1e1d48d20c3889b76b" }

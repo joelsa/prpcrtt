@@ -26,7 +26,7 @@ async fn main() {
     }
     let probe = probes[0].open().unwrap();
     let mut session = probe
-        .attach(TargetSelector::from("RP2040"), Permissions::default())
+        .attach(TargetSelector::from("STM32H723ZGTx"), Permissions::default())
         .unwrap();
     let rtt = {
         let mut core = session.core(0).unwrap();
